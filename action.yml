@@ -1,0 +1,44 @@
+name: "repo-environments-migrate"
+description: "An action to move a repository environment and its settings to another repo"
+inputs:
+  reviewer_mapping_file:
+    description: "Path to the reviewer mapping file"
+    required: true
+  org_mapping_file:
+    description: "Path to the organization mapping file"
+    required: true
+  source_repos:
+    description: "Source repositories, comma separated. Of the form <url.com/to>/ORG/REPO"
+    required: true
+  source_github_app_id:
+    description: "Source GitHub App ID"
+    required: true
+  source_github_app_private_key:
+    description: "Source GitHub App private key"
+    required: true
+  source_github_app_installation_id:
+    description: "Source GitHub App installation ID"
+    required: true
+  migration_type:
+    description: "Migration type ex. 'gei'"
+    required: false
+  source_github_api_url:
+    description: "Source GitHub API URL"
+    required: false
+    default: "https://api.github.com"
+  target_github_app_id:
+    description: "Target GitHub App ID"
+    required: false
+  target_github_app_private_key:
+    description: "Target GitHub App private key"
+    required: false
+  target_github_app_installation_id:
+    description: "Target GitHub App installation ID"
+    required: false
+  target_github_api_url:
+    description: "Target GitHub API URL"
+    required: false
+    default: "https://api.github.com"
+runs:
+  using: "node20"
+  main: "dist/index.js"

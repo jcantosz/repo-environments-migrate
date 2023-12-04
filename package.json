@@ -1,0 +1,25 @@
+{
+  "name": "environment-migrator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "github",
+    "action"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@octokit/auth-app": "^6.0.1",
+    "@octokit/core": "^5.0.2",
+    "@octokit/rest": "^20.0.2",
+    "csv-parser": "^3.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.28.3"
+  }
+}
