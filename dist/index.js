@@ -40856,7 +40856,7 @@ function createOctokitInstance(appId, appPrivateKey, appInstallationId, apiUrl) 
 
 async function getEnvironments(owner, repo) {
   try {
-    const response = await sourceOctokit.repos.get({ owner, repo });
+    const response = await sourceOctokit.repos.getAllEnvironments({ owner, repo });
     return response.data.environments;
   } catch (error) {
     console.error(error);
@@ -40929,14 +40929,17 @@ function mapReviewers(reviewers, reviewerMapping) {
 async function createOrUpdateEnvironment(targetOwner, targetRepo, environment, reviewers) {
   try {
     console.log(`Creating environment ${targetOwner}/${targetRepo}: ${environment.name}`);
+    console.log(
+      `Properties: owner: ${targetOwner}, repo: ${targetRepo}, environment_name: ${environment.name}, wait_timer: ${environment.wait_timer}, prevent_self_review: ${environment.prevent_self_review}, reviewers: ${reviewers}, deployment_branch_policy: ${environment.deployment_branch_policy},`
+    );
     await targetOctokit.repos.createOrUpdateEnvironment({
       owner: targetOwner,
       repo: targetRepo,
-      name: environment.name,
+      environment_name: environment.name,
       wait_timer: environment.wait_timer,
-      reviewers,
+      prevent_self_review: environment.prevent_self_review,
+      reviewers: reviewers,
       deployment_branch_policy: environment.deployment_branch_policy,
-      environment_protection_rules: environment.environment_protection_rules,
     });
     return null;
   } catch (error) {
