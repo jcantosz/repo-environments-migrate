@@ -69,7 +69,7 @@ async function getOrgMapping(file) {
   return getMapping(file, "source", "target");
 }
 
-async function getReviewierMapping(file) {
+async function getReviewerMapping(file) {
   if (mapType == "gei") {
     return getMapping(file, "mannequin-user", "target-user");
   } else {
@@ -80,7 +80,9 @@ async function getReviewierMapping(file) {
 // Function to get environments from source GitHub instance
 async function createEnvironments(sourceOwner, sourceRepo, targetOwner, targetRepo) {
   try {
+    console.log(`Getting environments for "${sourceOwner}/${sourceRepo}"`);
     const environments = await getEnvironments(sourceOwner, sourceRepo);
+    console.log(`Found environment(s): "${environments}"`);
     const reviewerMapping = await getReviewerMapping(reviewerMappingFile);
     const promises = environments.map((environment) =>
       createOrUpdateEnvironment(
