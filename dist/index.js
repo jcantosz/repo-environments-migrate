@@ -40950,7 +40950,7 @@ async function main() {
     const [sourceOrg, repo] = sourceRepo.split("/").slice(-2);
     const targetOrg = mapOrgs(sourceOrg, orgMapping);
 
-    const failedEnvironments = await createEnvironments(sourceOwner, repo, targetOrg, repo);
+    const failedEnvironments = await createEnvironments(sourceOrg, repo, targetOrg, repo);
     if (failedEnvironments.length > 0) {
       console.error(`Failed to create or update the following environments: ${failedEnvironments.join(", ")}`);
     }
