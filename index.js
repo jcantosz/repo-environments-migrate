@@ -202,6 +202,8 @@ async function createOrUpdateEnvironment(sourceOwner, targetOwner, targetRepo, e
     );
 
     // TODO: Need to map reviwers and groups to IDs of users (name not allowed)
+    // TODO: Set allow admin bypass setting on deployment
+    // TODO: Handle protected branches (instead of just globbed branch names)
     await targetOctokit.repos.createOrUpdateEnvironment({
       owner: targetOwner,
       repo: targetRepo,
