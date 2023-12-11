@@ -40947,7 +40947,9 @@ async function createOrUpdateEnvironment(targetOwner, targetRepo, environment, r
 
 async function main() {
   const orgMapping = await getOrgMapping(orgMappingFile);
+  console.log(`Repos to process: ${sourceRepos}`);
   for (const sourceRepo of sourceRepos) {
+    console.log(`Processing repo: ${sourceRepo}`);
     // expect repo to be of the form https://something.com/other/path/things/ORG/REPO
     const [sourceOrg, repo] = sourceRepo.split("/").slice(-2);
     const targetOrg = mapOrgs(sourceOrg, orgMapping);
