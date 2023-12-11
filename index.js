@@ -10,7 +10,7 @@ const reviewerMappingFile = core.getInput("reviewer_mapping_file");
 const orgMappingFile = core.getInput("org_mapping_file");
 
 // repo of the form https://github.com/org/repo
-const sourceRepos = core.getInput("source_repo").split(",");
+const sourceRepos = core.getInput("source_repos").split(",");
 const mapType = core.getInput("migration_type").toLowerCase();
 
 // Get GitHub source and destination inputs
