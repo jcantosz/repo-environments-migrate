@@ -53,6 +53,16 @@ async function getEnvironments(owner, repo) {
   }
 }
 
+async function usernameToID(username) {
+  const userObj = await targetOctokit.request("GET /users/{username}", {
+    username: username,
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  return userObj.data.id;
+}
+
 async function getMapping(file, sourceColumn, targetColumn) {
   const mapping = {};
   return new Promise((resolve, reject) => {
@@ -72,7 +82,7 @@ async function getOrgMapping(file) {
   return getMapping(file, "source", "target");
 }
 
-async function getReviewerMapping(file) {
+async function usernameToUsernameMap(file) {
   core.info(`\treading reviewers from ${file}`);
   if (mapType == "gei") {
     core.info(`\tIn GEI format (headers mannequin-user, target-user)`);
@@ -83,6 +93,15 @@ async function getReviewerMapping(file) {
   }
 }
 
+async function getReviewerMapping(file) {
+  let usernameMapping = await usernameToUsernameMap(file);
+  for (const [key, value] of Object.entries(usernameMapping)) {
+    console.log(`Trying to get ID for user: ${value}`);
+    usernameMapping[key] = await usernameToID(value);
+  }
+  return usernameMapping;
+}
+
 // Function to get environments from source GitHub instance
 async function createEnvironments(sourceOwner, sourceRepo, targetOwner, targetRepo) {
   try {
@@ -90,6 +109,7 @@ async function createEnvironments(sourceOwner, sourceRepo, targetOwner, targetRe
     const environments = await getEnvironments(sourceOwner, sourceRepo);
     core.debug(`\tFound environment(s): ${JSON.stringify(environments)}`);
     const reviewerMapping = await getReviewerMapping(reviewerMappingFile);
+
     core.info(`\treviewer mapping: ${JSON.stringify(reviewerMapping)}`);
     core.info(`\n`);
 
@@ -111,8 +131,8 @@ async function createEnvironments(sourceOwner, sourceRepo, targetOwner, targetRe
     // const results = await Promise.all(promises);
 
     // Get all failed results and return them
-    //const failedEnvironments = results.filter((result) => result !== null);
-    return failedEnvironments;
+    // const failedEnvironments = results.filter((result) => result !== null);
+    // return failedEnvironments;
   } catch (error) {
     console.error(error);
   }
@@ -176,7 +196,7 @@ async function createOrUpdateEnvironment(sourceOwner, targetOwner, targetRepo, e
       }
     }
 
-    if (hasProtectionRules) {
+    if (hasProtectionRules && environment.deployment_branch_policy.custom_branch_policies) {
       core.info(`Reading branch protection Polciies`);
       var policies = await getDeploymentBranchPolicy(sourceOwner, targetRepo, environment.name);
       for (policy of policies.branch_policies) {
@@ -238,11 +258,13 @@ async function main() {
     const targetOrg = mapOrgs(sourceOrg, orgMapping);
 
     core.info(`Mapping environments ${sourceOrg}/${repo} -> ${targetOrg}/${repo}`);
-
-    const failedEnvironments = await createEnvironments(sourceOrg, repo, targetOrg, repo);
-    if (failedEnvironments.length > 0) {
-      console.error(`Failed to create or update the following environments: ${failedEnvironments.join(", ")}`);
-    }
+    // let user = await usernameToID("jcantosz");
+    // console.log(`jcantosz: ${JSON.stringify(user)}`);
+    await createEnvironments(sourceOrg, repo, targetOrg, repo);
+    // const failedEnvironments = await createEnvironments(sourceOrg, repo, targetOrg, repo);
+    // if (failedEnvironments.length > 0) {
+    //   console.error(`Failed to create or update the following environments: ${failedEnvironments.join(", ")}`);
+    // }
   }
 }
 
