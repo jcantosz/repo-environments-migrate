@@ -4,9 +4,12 @@ inputs:
   reviewer_mapping_file:
     description: "Path to the reviewer mapping file"
     required: true
+  target_org:
+    description: "Target org to map all orgs to if orgMappingFile is not present"
+    required: false
   org_mapping_file:
     description: "Path to the organization mapping file"
-    required: true
+    required: false
   source_repos:
     description: "Source repositories, comma separated. Of the form <url.com/to>/ORG/REPO"
     required: true

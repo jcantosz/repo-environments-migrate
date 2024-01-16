@@ -8,6 +8,7 @@ const core = require("@actions/core");
 // Get action inputs
 const reviewerMappingFile = core.getInput("reviewer_mapping_file");
 const orgMappingFile = core.getInput("org_mapping_file");
+const targetOrg = core.getInput("target_org");
 
 // repo of the form https://github.com/org/repo
 const sourceRepos = core.getInput("source_repos").split(/[,\n]+/);
@@ -273,20 +274,24 @@ async function createOrUpdateEnvironment(sourceOwner, targetOwner, targetRepo, e
 }
 
 async function main() {
-  const orgMapping = await getOrgMapping(orgMappingFile);
+  let orgMapping = targetOrg;
+  if (orgMappingFile) {
+    orgMapping = await getOrgMapping(orgMappingFile);
+  }
   core.info(`Mapped orgs: ${JSON.stringify(orgMapping)}`);
   core.info(`Repos to process: ${sourceRepos}\n`);
   for (const sourceRepo of sourceRepos) {
     core.info(`Processing repo: ${sourceRepo}`);
     // expect repo to be of the form https://something.com/other/path/things/ORG/REPO
     const [sourceOrg, repo] = sourceRepo.split("/").slice(-2);
-    const targetOrg = mapOrgs(sourceOrg, orgMapping);
 
-    core.info(`Mapping environments ${sourceOrg}/${repo} -> ${targetOrg}/${repo}`);
+    const mappedTargetOrg = orgMappingFile ? mapOrgs(sourceOrg, orgMapping) : targetOrg;
+
+    core.info(`Mapping environments ${sourceOrg}/${repo} -> ${mappedTargetOrg}/${repo}`);
     // let user = await usernameToID("jcantosz");
     // console.log(`jcantosz: ${JSON.stringify(user)}`);
     await createEnvironments(sourceOrg, repo, targetOrg, repo);
-    // const failedEnvironments = await createEnvironments(sourceOrg, repo, targetOrg, repo);
+    // const failedEnvironments = await mappedTargetOrg(sourceOrg, repo, targetOrg, repo);
     // if (failedEnvironments.length > 0) {
     //   console.error(`Failed to create or update the following environments: ${failedEnvironments.join(", ")}`);
     // }
