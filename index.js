@@ -14,10 +14,14 @@ const sourceRepos = core.getInput("source_repos").split(",");
 const mapType = core.getInput("migration_type").toLowerCase();
 
 // Get GitHub source and destination inputs
+const sourcePAT = core.getInput("source_github_pat");
+
 const sourceAppId = core.getInput("source_github_app_id");
 const sourceAppPrivateKey = core.getInput("source_github_app_private_key");
 const sourceAppInstallationId = core.getInput("source_github_app_installation_id");
 const sourceAPIUrl = core.getInput("source_github_api_url") || "https://api.github.com";
+
+const targetPAT = core.getInput("target_github_pat");
 
 const targetAppId = core.getInput("target_github_app_id") || sourceAppId;
 const targetAppPrivateKey = core.getInput("target_github_app_private_key") || sourceAppPrivateKey;
@@ -27,21 +31,42 @@ const targetAPIUrl = core.getInput("target_github_api_url") || sourceAPIUrl;
 core.info(`isDebug? ${core.isDebug()}`);
 
 // Create Octokit instances for source and target
-const sourceOctokit = createOctokitInstance(sourceAppId, sourceAppPrivateKey, sourceAppInstallationId, sourceAPIUrl);
-const targetOctokit = createOctokitInstance(targetAppId, targetAppPrivateKey, targetAppInstallationId, targetAPIUrl);
+const sourceOctokit = createOctokitInstance(
+  sourcePAT,
+  sourceAppId,
+  sourceAppPrivateKey,
+  sourceAppInstallationId,
+  sourceAPIUrl
+);
+const targetOctokit = createOctokitInstance(
+  targetPAT,
+  targetAppId,
+  targetAppPrivateKey,
+  targetAppInstallationId,
+  targetAPIUrl
+);
 
 // Function to create Octokit instance
-function createOctokitInstance(appId, appPrivateKey, appInstallationId, apiUrl) {
-  return new Octokit({
-    authStrategy: createAppAuth,
-    auth: {
-      appId: appId,
-      privateKey: appPrivateKey,
-      installationId: appInstallationId,
-    },
-    baseUrl: apiUrl,
-    log: core.isDebug() ? console : null,
-  });
+function createOctokitInstance(PAT, appId, appPrivateKey, appInstallationId, apiUrl) {
+  // Prefer app auth to PAT if both are available
+  if (appId && appPrivateKey && appInstallationId) {
+    return new Octokit({
+      authStrategy: createAppAuth,
+      auth: {
+        appId: appId,
+        privateKey: appPrivateKey,
+        installationId: appInstallationId,
+      },
+      baseUrl: apiUrl,
+      log: core.isDebug() ? console : null,
+    });
+  } else {
+    return new Octokit({
+      auth: PAT,
+      baseUrl: apiUrl,
+      log: core.isDebug() ? console : null,
+    });
+  }
 }
 
 async function getEnvironments(owner, repo) {

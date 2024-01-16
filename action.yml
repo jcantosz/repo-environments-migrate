@@ -12,13 +12,16 @@ inputs:
     required: true
   source_github_app_id:
     description: "Source GitHub App ID"
-    required: true
+    required: false
   source_github_app_private_key:
     description: "Source GitHub App private key"
-    required: true
+    required: false
   source_github_app_installation_id:
     description: "Source GitHub App installation ID"
-    required: true
+    required: false
+  source_github_pat:
+    description: "Personal access token if using that to auth instead of an app"
+    required: false
   migration_type:
     description: "Migration type ex. 'gei'"
     required: false
@@ -34,6 +37,9 @@ inputs:
     required: false
   target_github_app_installation_id:
     description: "Target GitHub App installation ID"
+    required: false
+  target_github_pat:
+    description: "Personal access token if using that to auth instead of an app"
     required: false
   target_github_api_url:
     description: "Target GitHub API URL"

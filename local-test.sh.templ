@@ -1,0 +1,20 @@
+export INPUT_REVIEWER_MAPPING_FILE="tmp/reviewers.csv"
+export INPUT_ORG_MAPPING_FILE="tmp/orgs.csv"
+
+export INPUT_SOURCE_REPOS="https://github.com/owner/repo,https://github.com/owner/repo2,https://github.com/owner/repo3"
+
+export INPUT_SOURCE_GITHUB_API_URL="api.github.com"
+export INPUT_SOURCE_GITHUB_APP_ID=""
+export INPUT_SOURCE_GITHUB_APP_PRIVATE_KEY="$(cat <path/to/app/key>)"
+export INPUT_SOURCE_GITHUB_APP_INSTALLATION_ID=""
+
+export INPUT_TARGET_GITHUB_API_URL="https://api.github.com"
+export INPUT_TARGET_GITHUB_APP_ID=""
+export INPUT_TARGET_GITHUB_APP_PRIVATE_KEY="$(cat <path/to/app/key>)"
+export INPUT_TARGET_GITHUB_APP_INSTALLATION_ID=""
+
+
+export ACTIONS_STEP_DEBUG="true"
+export ACTIONS_RUNNER_DEBUG="true"
+
+node index.js
