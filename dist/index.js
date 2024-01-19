@@ -40817,6 +40817,7 @@ const csv = __nccwpck_require__(497);
 const { Octokit } = __nccwpck_require__(21);
 const { createAppAuth } = __nccwpck_require__(4167);
 const core = __nccwpck_require__(6150);
+const { fail } = __nccwpck_require__(9491);
 
 // Get action inputs
 const reviewerMappingFile = core.getInput("reviewer_mapping_file");
@@ -40841,6 +40842,8 @@ const targetAppId = core.getInput("target_github_app_id") || sourceAppId;
 const targetAppPrivateKey = core.getInput("target_github_app_private_key") || sourceAppPrivateKey;
 const targetAppInstallationId = core.getInput("target_github_app_installation_id") || sourceAppInstallationId;
 const targetAPIUrl = core.getInput("target_github_api_url") || sourceAPIUrl;
+
+let failedMigrations = [];
 
 core.info(`isDebug? ${core.isDebug()}`);
 
@@ -40996,15 +40999,34 @@ async function getDeploymentBranchPolicy(owner, repo, environment_name) {
 async function createDeploymentBranchPolicy(policy) {
   return await targetOctokit.rest.repos.createDeploymentBranchPolicy(policy);
 }
+async function getTeamId(org, teamSlug) {
+  const teamDetails = await targetOctokit.request("GET /orgs/{org}/teams/{team_slug}", {
+    org: org,
+    team_slug: teamSlug,
+    headers: {
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  return teamDetails.data.id;
+}
+
 // Function to get reviewer mapping from file
-function mapReviewers(reviewers, reviewerMapping) {
+async function mapReviewers(targetOrg, reviewers, reviewerMapping) {
   var mappedReviewers = [];
   for (const reviewer of reviewers) {
     const type = reviewer.type;
     // read slug prop if it's a team, else read login (it's a user)
-    const name = type == "Team" ? reviewer.reviewer.slug : reviewer.reviewer.login;
-    core.debug(`Mapping user with properties type: ${type}, name: ${name}`);
-    mappedReviewers.push({ type: type, id: reviewerMapping[name] || name });
+    let reviewerId;
+
+    //const name = type == "Team" ? reviewer.reviewer.slug : reviewer.reviewer.login;
+    if (type == "Team") {
+      reviewerId = await getTeamId(targetOrg, reviewer.reviewer.slug);
+    } else {
+      reviewerId = reviewerMapping[reviewer.reviewer.login];
+    }
+    core.debug(`Mapping user with properties type: ${type}, name: ${reviewerId}`);
+
+    mappedReviewers.push({ type: type, id: reviewerId });
   }
   console.log(mappedReviewers);
   return mappedReviewers;
@@ -41024,7 +41046,8 @@ async function createOrUpdateEnvironment(sourceOwner, targetOwner, targetRepo, e
           wait_timer = rule.wait_timer;
           core.debug(`Read wait time from source ${wait_timer}`);
         } else if (rule.type == "required_reviewers") {
-          reviewers = mapReviewers(rule.reviewers, reviewerMapping);
+          console.log("mapping reviwiers");
+          reviewers = await mapReviewers(targetOwner, rule.reviewers, reviewerMapping);
           core.debug(`Read and mapped reviewers from source ${JSON.stringify(reviewers)}`);
         } else if ((rule.type = "branch_policy")) {
           hasProtectionRules = true;
@@ -41081,6 +41104,9 @@ async function createOrUpdateEnvironment(sourceOwner, targetOwner, targetRepo, e
 
     return null;
   } catch (error) {
+    failedMigrations.push(
+      `env: "${environment.name}" from "${sourceOwner}/${targetRepo}" to "${targetOwner}/${targetRepo}"`
+    );
     console.error(`Failed to create or update environment "${environment.name}": ${error.message}`);
     return `${targetOwner}/${targetRepo}:${environment.name}`;
   }
@@ -41108,6 +41134,13 @@ async function main() {
     // if (failedEnvironments.length > 0) {
     //   console.error(`Failed to create or update the following environments: ${failedEnvironments.join(", ")}`);
     // }
+  }
+
+  if (failedMigrations.length > 0) {
+    console.log("Failed Migrations:");
+    for (const migration of failedMigrations) {
+      console.log(`\t${migration}`);
+    }
   }
 }
 
