@@ -40939,7 +40939,14 @@ async function getReviewerMapping(file) {
   let usernameMapping = await usernameToUsernameMap(file);
   for (const [key, value] of Object.entries(usernameMapping)) {
     console.log(`Trying to get ID for user: ${value}`);
-    usernameMapping[key] = await usernameToID(value);
+    try {
+      usernameMapping[key] = await usernameToID(value);
+    } catch (error) {
+      console.log(`User ${value} not found in the destination, skipping`);
+      if (usernameMapping.has(key)) {
+        usernameMapping.delete(key);
+      }
+    }
   }
   return usernameMapping;
 }
