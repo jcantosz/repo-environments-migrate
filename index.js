@@ -130,8 +130,8 @@ async function getReviewerMapping(file) {
       usernameMapping[key] = await usernameToID(value);
     } catch (error) {
       console.log(`User ${value} not found in the destination, skipping`);
-      if (usernameMapping.has(key)) {
-        usernameMapping.delete(key);
+      if (usernameMapping[key]) {
+        delete usernameMapping[key];
       }
     }
   }
@@ -213,14 +213,19 @@ async function mapReviewers(targetOrg, reviewers, reviewerMapping) {
     let reviewerId;
 
     //const name = type == "Team" ? reviewer.reviewer.slug : reviewer.reviewer.login;
-    if (type == "Team") {
-      reviewerId = await getTeamId(targetOrg, reviewer.reviewer.slug);
-    } else {
-      reviewerId = reviewerMapping[reviewer.reviewer.login];
+    try {
+      if (type == "Team") {
+        reviewerId = await getTeamId(targetOrg, reviewer.reviewer.slug);
+      } else {
+        reviewerId = reviewerMapping[reviewer.reviewer.login];
+      }
+      core.debug(`Mapping user with properties type: ${type}, name: ${reviewerId}`);
+      if (reviewerId) {
+        mappedReviewers.push({ type: type, id: reviewerId });
+      }
+    } catch (error) {
+      core.info(`Couldn't map users ${user}, skipping`);
     }
-    core.debug(`Mapping user with properties type: ${type}, name: ${reviewerId}`);
-
-    mappedReviewers.push({ type: type, id: reviewerId });
   }
   console.log(mappedReviewers);
   return mappedReviewers;
